@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}
+计算机自适应测验
+{% endblock %}
+{% block css %}
+        <link href="{% static 'CSS/result_analyse.css' %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <script type="text/javascript" src="{% static 'JS/jquery-3.2.1.js' %}"></script>
+        <div id="container" class="wrap">
+            <div class="left">
+                <form role="form" action="/result_analyse/" method="post">
+                    {% csrf_token %}
+                    <div class="logoDiv">
+                        {% if message %}
+                            <div class="alert alert-danger logoTitle">{{ message }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="menu-title">排序方式:
+                            <select id="sort" name="sort" class="menu-item">
+                                <option value="answer_order" selected="selected">按答题顺序排列</option>
+                                <option value="question_classify">按题目类别排列</option>
+                            </select>
+                        </label>
+                    </div>
+                    {% ifequal request.session.identity '管理员' %}
+                        <div>
+                            <label class="menu-title">教师：<br>
+                                <select id="teacher" name="teacher" class="menu-item">
+                                    <option value="">请选择教师</option>
+                                </select>
+                            </label>
+                            <br>
+                            <label class="menu-title">学生：<br>
+                                <select id="student" name="student" class="menu-item">
+                                    <option value="">请选择学生</option>
+                                </select>
+                            </label>
+                            <br>
+                            <div  style="text-align: center"><br>
+                            <button type="button" id="get_infor" name="get_infor" class="btn btn-primary">查看答题信息</button>
+                            </div>
+                        </div>
+                        <script>
+                            $.get('{% url 'get_teacher' %}',function(data) {
+                                console.log(data);
+                                for (var i = 0, len = data.teachers.length; i < len; i++) {
+                                    $new = $("<option value=" + data.teachers[i][0]+'+'+data.teachers[i][4]+'+'+data.teachers[i][5] + ">" +data.teachers[i][2]+'-'+data.teachers[i][3]+'-'+data.teachers[i][1] + "</option>");
+                                    $("#teacher").append($new);
+                                    }
+                                });
+
+                                $("#teacher").change(function(){
+                                    $("#student").empty().append('<option value="">请选择学生</option>');
+                                    $.ajax({
+                                        url:'{% url 'get_student' %}',
+                                        type:'get',
+                                        data:{"teacher_id":$(this).val()}
+                                    }).done(function(data){
+                                        console.log(data);
+                                        for(var i = 0,len = data.students.length; i<len ;i++){
+                                            $new = $( "<option value="+data.students[i][0]+'+'+data.students[i][2]+'+'+data.students[i][3] +">"+  data.students[i][1]  +"</option>" );
+                                            $("#student").append( $new );
+                                        }
+                                    });
+                                });
+                                $(function () {
+
+                                    $('#get_infor').click(function () {
+                                    student=$('#student option:selected').val();
+                                    console.log(student);
+                                    sort_method=$('#sort option:selected').val();
+                                    console.log(sort_method);
+                                    $.ajax({
+                                        url:'{% url 'result_analyse' %}',
+                                        type:'post',
+                                        data:{'student':student,'sort_method':sort_method},
+                                        success:function (data) {
+                                            {#显示信息#}
+                                            var info_button=document.getElementById('right-bar');
+
+                                            var html=$(data).find('#right-content');
+                                            $('#right-content').html(html);
+                                            info_button.style.display = 'block';
+
+
+
+                                            {#var html=data.find('#right');#}
+                                            {#console.log(html);#}
+                                            {#$('#right').html(html)#}
+                                            }
+                                        })
+                                     })
+                                })
+                            </script>
+                        {% else %}<!--学生答题-->
+                            <br>
+                            <div style="text-align: center">
+                                <button type="button" id="get_infor" name="get_infor" class="btn btn-primary">查看答题信息</button>
+                            </div>
+                            <script>
+                                $('#get_infor').click(function () {
+                                    sort_method=$('#sort option:selected').val();
+
+                                    $.ajax({
+                                        url:'{% url 'result_analyse' %}',
+                                        type:'post',
+                                        data:{'sort_method':sort_method},
+                                        success:function (data) {
+                                            {#显示信息#}
+                                            var info_button=document.getElementById('right-bar');
+
+                                            var html=$(data).find('#right-content');
+                                            $('#right-content').html(html);
+                                            info_button.style.display = 'block';
+
+                                        }
+                                    })
+
+                                })
+                            </script>
+                        {% endifequal %}
+                </form>
+            </div>
+
+            <div id="right-content" class="right">
+                <div class="tab-pane">
+                        <div id="classify" style="display: block">
+{#                    <label>题目类别</label>#}
+                        <div id="field">
+                            {% for field,dimensions_list in fields.items %}
+{#                                <label class="text-center" id="field_num">{{ field }}、</label>#}
+                                <label class="text-center" id="field_text">领域：{{ field }}</label>
+                                <div id="dimensions">
+                                    {% for dimension in dimensions_list %}
+{#                                        <label class="text-center" id="dimension_num">{{ dimension_num }}、</label>#}
+                                        <label class="text-center" id="dimension_text">维度：{{ dimension.dimension_text }}</label>
+                                        <div id="questions">
+                                        {% for loc_dimension,questions_list in dimensions.items %}
+                                            {% ifequal loc_dimension dimension %}
+                                                {% for question in questions_list %}
+{#                                            <label class="text-center" id="question_num">{{ question_num }}、</label>#}
+                                                    <label class="text-center" id="question_text">问题：{{ question.question_text }}</label>
+                                                    {% for loc_question,choices_list in questions.items %}
+                                                        {% ifequal loc_question question %}
+                                                                <br>
+                                                                <label id="choice">作答结果:{{ choices_list.0 }}</label>
+                                                                <label id="information">该题信息量:{{ choices_list.1 }}</label>
+                                                                <label id="ability">当前能力值:{{ choices_list.2 }}</label>
+                                                        {% endifequal %}
+                                                    {% endfor %}
+                                                    <br>
+                                                {% endfor %}
+                                            {% endifequal %}
+                                        {% endfor %}
+                                        </div>
+                                        <br>
+                                    {% endfor %}
+                                </div>
+                                <br>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+
+{#                按答题顺序排列#}
+                    <div id="order" style="display: block">
+                        <div>
+{#                        <label>按到答题顺序</label>#}
+                        {% for question,results in questions_result.items %}
+                            <span>
+                                <label id="question_num">{{ results.0 }}、</label>
+                                <label id="question_text">{{ question.question_text }}</label>
+                                <br>
+                                <label>所属维度 ： {{ results.4 }} : {{ results.5 }}</label>
+                                <br>
+                                <label id="choice">作答结果 : {{ results.1 }}</label>
+                                <br>
+                                <label id="information">该题信息量 : {{ results.2 }}</label>
+                                <br>
+                                <label id="ability">当前能力值 : {{ results.3 }}</label>
+                            </span>
+                            <br>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="right-bar" class="right" style="display: none">
+                <form role="form" id="right_form" action="/result_analyse/" method="get">
+                    {% csrf_token %}
+                    <div class="tab-pane">
+                        {% ifequal request.session.identity '管理员' %}
+                            <div style="text-align: center"><br>
+                                <label class="text-center">学生心理状态：<br>
+                                    <textarea id="mentality" rows="3" cols="30"></textarea>
+                                </label>
+                                <br>
+                                <input type="button" class="btn btn-success btn-lg" id="sub" name="sub" value="提交">
+                            </div>
+                             <script>
+                    $(function () {
+                        {#var student_id={{ student_id|safe }};#}
+                        {#var student_address={{ student_address|safe }};#}
+
+                        $('#sub').click(function () {
+                            var mentality=document.getElementById('mentality').value;
+                            {#alert(student_id);#}
+                            $.ajax({
+                                url:'{% url 'result_analyse' %}',
+                                type:'get',
+                                data:{'mental_state':mentality},
+                                success:function (data) {
+                                    alert('提交成功')
+                                }
+                            })
+                        })
+                    })
+                    </script>
+                        {% endifequal %}
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+{% endblock %}

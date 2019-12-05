@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}主页{% endblock %}
+{% block css %}
+    <link href="{% static 'CSS/index.css' %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+    <script type="text/javascript" src="{% static 'JS/jquery-3.2.1.js' %}"></script>
+    <div id="container" class="bg">
+        <div id="content">
+            <h1 class="text-center"><strong>因人而异、自适应心理测验系统</strong></h1>
+            {% if not request.session.is_login %}
+                <button type="button" onclick="javascript:window.location.href='{% url 'login' %}'" class="btn btn-lg btn-warning active"><strong>开始使用</strong></button>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

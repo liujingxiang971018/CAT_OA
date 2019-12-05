@@ -1,0 +1,89 @@
+{% load staticfiles %}
+{#通过页面顶端的{% load staticfiles %}加载后，才可以使用static方法#}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>{% block title %}base{% endblock %}</title>
+{#通过{% block title %}base{% endblock %}设置一个动态的页面title#}
+
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    {% block css %}
+    {% endblock %}
+{#通过{% block css %}{% endblock %}设置动态的css加载块  #}
+
+  </head>
+  <body id="main">
+    <nav class="navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+{#          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#my-nav" aria-expanded="false">#}
+{#            <span class="sr-only">切换导航条</span>#}
+{#            <span class="icon-bar"></span>#}
+{#            <span class="icon-bar"></span>#}
+{#            <span class="icon-bar"></span>#}
+{#          </button>#}
+          <a class="navbar-brand" href="/">中小学生心理健康测验系统</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="my-nav">
+          <ul class="nav navbar-nav navbar-right">
+              {% if request.session.is_login %}
+              <li>
+              <details>
+                  <summary>当前在线：{{ request.session.user_id }}({{ request.session.user_name }}-{{ request.session.identity }})</summary>
+                  {% ifequal request.session.identity '管理员' %}
+                      <a href="{% url 'information_complete' %}">信息完善</a>
+                      <a href="{% url 'change_password' %}">修改密码</a>
+                      <a href="{% url 'jump' %}">后台管理</a>
+                      <a href="{% url 'result_analyse' %}">心理分析</a>
+                      <a href="{% url 'logout' %}">登出</a>
+                  {% else %}
+                      {% ifequal request.session.identity '教师' %}
+                          <a href="{% url 'information_complete' %}">信息完善</a>
+                          <a href="{% url 'change_password' %}">修改密码</a>
+                          <a href="{% url 'jump' %}">信息管理</a>
+                          <a href="{% url 'logout' %}">登出</a>
+                      {% else %}
+                          <a href="{% url 'information_complete' %}">信息完善</a>
+                          <a href="{% url 'change_password' %}">修改密码</a>
+                          <a href="{% url 'test' %}">试题测试</a>
+                          <a href="{% url 'result_analyse' %}">测试结果</a>
+                          <a href="{% url 'logout' %}">登出</a>
+                      {% endifequal %}
+                  {% endifequal %}
+              </details>
+              </li>
+              {% else %}
+              <li><a href="{% url 'login' %}">登录</a></li>
+              <li><a href="{% url 'register' %}">注册</a></li>
+              {% endif %}
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
+    {% block content %}{% endblock %}
+{#通过{% block content %}{% endblock %}为具体页面的主体内容留下接口    #}
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{% static 'JS/jquery-3.2.1.js' %}"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+  </body>
+</html>

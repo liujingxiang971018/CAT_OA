@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}
+计算机自适应测验
+{% endblock %}
+{% block css %}
+        <link href="{% static 'CSS/test.css' %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <script type="text/javascript" src="{% static 'JS/jquery-3.2.1.js' %}"></script>
+    <div id="container" class="bg">
+        <div id="content">
+            <form role="form" action="/test/" method="post">
+                {% if message %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                {% endif %}
+                {% csrf_token %}
+
+                    <div id="question">
+                        <label style="font-size: x-large" id="num">{{ question_num }}、</label>
+                        <label style="font-size: x-large" id="text">{{ question_text }}</label>
+                    </div>
+                    <div class="radio loc">
+                        {% for choice in choices %}
+                            <span>
+
+                                <label for="{{ choice.choice_num }}" class="radio new" style="font-size: large" id="id_choice">
+                                    <input id="{{ choice.choice_num }}" name="choice" type="radio" value="{{ choice.choice_num }}"/>{{ choice.choice_text }}
+                                </label>
+                                <br>
+                            </span>
+                        {% endfor %}
+                    </div>
+
+                <br>
+                {% if not finish %}
+                    <button type="button" id="next" name="next"  class="btn btn-info btn-lg">下一题</button>
+                {% else %}
+                    <button type="button" id="finish" name="finish" class="btn btn-success btn-lg">测验完成，提交</button>
+                {% endif %}
+
+            </form>
+        </div>
+    </div>
+    <script>
+    $(function(){
+        {#$.get('{% url 'test' %}',function (data) {#}
+        {#    question_num=data.question_num;#}
+        {#    #}
+
+        //});
+        question_name={{ question|safe }};
+        information={{ information|safe }};
+        {#alert(question_name);#}
+
+        $('#next').click(function () {
+            {#获取到单选框的值#}
+            choice=$('input:radio:checked').val();
+            {#window.alert(choice);#}
+
+
+            $.ajax({
+                url:'{% url 'test' %}',
+                type:'post',
+                data:{'choice':choice,'question':question_name,'information':information},
+                success:function (data) {
+                    {#location.reload(true);#}
+                    {#location.href=url#}
+                    {#$('#container').remove();#}
+                    {#alert(data);#}
+
+                    {#console.log(data);#}
+                    $('#main').html(data);
+
+                    {#alert()#}
+                }
+
+
+            });
+        });
+
+         $('#finish').click(function () {
+           choice=$('input:radio:checked').val();
+           $.ajax({
+               url:'{% url 'test' %}',
+                type:'post',
+                data:{'choice':choice,'question':question_name,'information':information},
+                success:function (data) {
+                   {
+                       window.location.href={% url 'result_analyse' %};
+                   }
+               }
+           })
+        });
+    })
+    </script>
+{% endblock %}
+
+

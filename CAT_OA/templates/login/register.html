@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}登录{% endblock %}
+{% block css %}
+    <link href="{% static 'CSS/login.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <script type="text/javascript" src="{% static 'JS/jquery-3.2.1.js' %}"></script>
+
+    <div class="container  bg">
+        <div class="row row-centered">
+            <div class="well col-md-4 col-centered">
+                <h2 class="text-center">欢迎注册</h2>
+                <form role="form" action="/register/" method="post">
+                    {% if message %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endif %}
+                    {% csrf_token %}
+                    <div class="input-group input-group-md">
+                        <ul class="list-inline">
+                            <li>
+                                <label>省份：
+                                <select id="province" name="province">
+                                    <option value="">请选择省份</option>
+                                </select>
+                                </label>
+                            </li>
+                            <li>
+                                <label>城市：
+                                <select id="city" name="city">
+                                    <option value="">请选择城市</option>
+                                </select>
+                                </label>
+                            </li>
+                            <li>
+                            <label>区/县：
+                                <select id="county" name="county">
+                                    <option value="">请选择区县</option>
+                                </select>
+                                </label>
+                            </li>
+
+                            <li>
+                            <label>学校：
+                                <select id="school" name="school">
+                                    <option value="">请选择学校</option>
+                                </select>
+                            </label>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="input-group input-group-md">
+                        <label for="choice_identity">身份：
+                            <select id="identity" name="identity">
+                                <option value="管理员">管理员</option>
+                                <option value="教师">教师</option>
+                                <option value="学生"  selected="selected">学生</option>
+                            </select>
+                        </label>
+                    </div><br>
+
+                    <div class="input-group input-group-md">
+                        <span class="input-group-addon" id="sizing-addon1"><i class="glyphicon glyphicon-user" aria-hidden="true"></i></span>
+                        <input type="text" class="form-control" id="user_id" name="user_id" placeholder="请输入用户ID"/>
+                    </div><br>
+
+                    <div class="input-group input-group-md">
+                        <span class="input-group-addon" id="sizing-addon1"><i class="glyphicon glyphicon-lock"></i></span>
+                        <input type="password" class="form-control" id="password1" name="password1"  placeholder="请输入包括8-20位且两种字符的密码"/>
+                    </div><br>
+
+                    <div class="input-group input-group-md">
+                        <span class="input-group-addon" id="sizing-addon1"><i class="glyphicon glyphicon-lock"></i></span>
+                        <input type="password" class="form-control" id="password2" name="password2"  placeholder="请再一次输入密码"/>
+                    </div><br>
+                    <button type="reset" class="btn btn-default pull-left">重置</button>
+                    <button type="submit" class="btn btn-success pull-right">提交</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(function () {
+            //获取省份
+            $.get('{% url 'get_province' %}',function(data){
+                for(var i = 0,len = data.provinces.length; i<len ;i++){
+                    $new = $("<option value="+data.provinces[i][0] +">"+  data.provinces[i][1]  +"</option>" );
+                    $("#province").append( $new );
+                }
+            });
+            //改变省份后
+            $("#province").change(function(){
+                //清空市和区
+                $("#city").empty().append('<option value="">请选择城市</option>');
+                $("#county").empty().append('<option value="">请选择区/县</option>');
+                $("#school").empty().append('<option value="">请选择学校</option>');
+                $.ajax({
+                    url:'{% url 'get_city' %}',
+                    type:'get',
+                    data:{"city_id":$(this).val()}
+                }).done(function(data){
+                    for(var i = 0,len = data.cities.length; i<len ;i++){
+                        $new = $( "<option value="+data.cities[i][0] +">"+  data.cities[i][1]  +"</option>" );
+                        $("#city").append( $new );
+                    }
+                });
+            });
+            //改变城市后
+            $("#city").change(function(){
+                //清空区
+                $("#county").empty().append('<option value="">请选择区/县</option>');
+                $("#school").empty().append('<option value="">请选择学校</option>');
+                $.ajax({
+                    url:'{% url 'get_county' %}',
+                    type:'get',
+                    data:{"county_id":$(this).val()}
+                }).done(function(data){
+                    for(var i = 0,len = data.counties.length; i<len ;i++){
+                        $new = $( "<option value="+data.counties[i][0] +">"+  data.counties[i][1]  +"</option>" );
+                        $("#county").append($new );
+                    }
+                });
+            });
+            //改变区县后
+            $("#county").change(function(){
+                //清空区
+                $("#school").empty().append('<option value="">请选择学校</option>');
+                $.ajax({
+                    url:'{% url 'get_school' %}',
+                    type:'get',
+                    data:{"school_id":$(this).val()}
+                }).done(function(data){
+                    for(var i = 0,len = data.schools.length; i<len ;i++){
+                        $new = $( "<option value="+ data.schools[i][0] +">"+  data.schools[i][1]  +"</option>" );
+                        $("#school").append($new );
+                    }
+                });
+            });
+        });
+    </script>
+
+{% endblock %}
+

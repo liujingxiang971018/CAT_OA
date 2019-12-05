@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block title %}
+信息完善
+{% endblock %}
+{% block css %}
+        <link href="{% static 'CSS/information_complete.css' %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <script type="text/javascript" src="{% static 'JS/jquery-3.2.1.js' %}"></script>
+    <div class="container bg">
+        <div class="row row-centered">
+            <div class="well col-md-4 col-centered">
+                {% ifequal request.session.identity '管理员' %}
+                    <h2 class="text-center">完善信息</h2>
+                    <form class="form-login" enctype="multipart/form-data" action="/information_complete/" method="post" >
+                        {% if message %}
+                            <div class="alert alert-danger">{{ message }}</div>
+                        {% endif %}
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label>用户ID:</label>
+                            <input type="text" name="administrator_id" readonly="readonly" value="{{ request.session.user_id }}" class="form-control" id="administrator_id" autofocus required  title="当前登录用户ID，只读"/>
+                        </div>
+                        <div class="form-group">
+                            <label>所属学校：</label>
+                            <input type="text" name="administrator_address" readonly="readonly" value="{{ request.session.province }}-{{ request.session.city }}-{{ request.session.county }}-{{ request.session.school }}" class="form-control" id="administrator_address" autofocus required title="只读"/>
+                        </div>
+                        <div class="form-group">
+                            <label>身份：</label>
+                            <input type="text" name="administrator_identity" readonly="readonly" value="{{ request.session.identity }}" id="administrator_identity" class="form-control" autofocus required title="只读"/>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名：</label>
+                            <input type="text" name="administrator_name" readonly="readonly" value="{{ request.session.user_name }}"  id="administrator_name" class="form-control" autofocus required/>
+                        </div>
+                        <div class="form-group">
+                            <label>联系方式：</label>
+                            <input type="text" name="administrator_mobile" id="administrator_mobile" class="form-control" value="{{ administrator_mobile }}" autofocus required/>
+                        </div>
+    {#                    上传教师id文件，用于教师注册时查找是否是本校教师,必须包含教师id#}
+                        <div class="form-group">
+                            <label>教师ID文件：</label><br>
+                            <input type="file" name="administrator_file">
+                        </div>
+                        <button type="reset" class="btn btn-default pull-left">重置</button>
+                        <button type="submit" class="btn btn-success pull-right">提交</button>
+                    </form>
+                {% else %}
+                    {% ifequal request.session.identity '教师' %}
+                        <h2 class="text-center">完善信息</h2>
+                        <form class="form-login" enctype="multipart/form-data" action="/information_complete/" method="post">
+                            {% if message %}
+                                <div class="alert alert-danger">{{ message }}</div>
+                            {% endif %}
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <label>用户ID:</label>
+                                <input type="text" name="teacher_id" readonly="readonly" value="{{ request.session.user_id }}" class="form-control" id="teacher_id" autofocus required  title="当前登录用户ID，只读"/>
+                            </div>
+                            <div class="form-group">
+                                <label>所属学校：</label>
+                                <input type="text" name="teacher_address" readonly="readonly" value="{{ request.session.province }}-{{ request.session.city }}-{{ request.session.county }}-{{ request.session.school }}" class="form-control" id="teacher_address" autofocus required title="只读"/>
+                            </div>
+                            <div class="form-group">
+                                <label>身份：</label>
+                                <input type="text" name="teacher_identity" readonly="readonly" value="{{ request.session.identity }}" id="teacher_identity" class="form-control" autofocus required title="只读"/>
+                            </div>
+                            <div class="form-group">
+                                <label>姓名：</label>
+                                <input type="text" name="teacher_name" readonly="readonly" value="{{ request.session.user_name }}" id="teacher_name" class="form-control" autofocus required/>
+                            </div>
+                            <div class="form-group">
+                                <label>职位：
+                                <select name="post" id="post">
+                                    {% if teacher_post %}
+                                        {% ifequal teacher_post '班主任' %}
+                                             <option value="班主任" selected="selected">班主任</option>
+                                             <option value="普通教师">普通教师</option>
+                                        {% else %}
+                                             <option value="班主任">班主任</option>
+                                             <option value="普通教师" selected="selected">普通教师</option>
+                                        {% endifequal %}
+                                    {% else %}
+                                        <option value="班主任" selected="selected">班主任</option>
+                                        <option value="普通教师">普通教师</option>
+                                    {% endif %}
+                                </select>
+                                </label><!--班主任/普通教师 -->
+                            </div>
+        {#                    上传学生id文件，用于学生注册时查找是否是本校教师,必须包含学生id#}
+
+                            <div class="form-group" style="display:block" id="upload_file">
+                                <script>
+                                    $(function () {
+                                        $("#post").change(function () {
+                                            var post=document.getElementById('post');
+                                            var flag=document.getElementById('upload_file');
+                                            if(post.value=='班主任')
+                                            {
+                                               flag.style.display='block';
+                                            }
+                                            else {
+                                                flag.style.display = 'none';
+                                            }
+                                        })
+                                    });
+                                </script>
+                                <label>学生ID文件：</label>
+                                <input type="file" name="teacher_file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" title="支持上传Excel表格"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label>所授课程:</label><br><!--班主任/普通教师 -->
+                                <select name="grade" id="grade">
+                                    <option value="">年级</option>
+                                </select>
+                                <select name="team" id="team">
+                                    <option value="">班级</option>
+                                </select>
+                                <select name="course" id="course">
+                                    <option value="">课程</option>
+                                </select>
+    {#                            onclick点击事件的名称不能和id一样#}
+                                <input type="button" onclick="addcourse()" name="add_course" id="add_course" value="添加">
+                                <input type="text" name="teach_course" id="teach_course"  class="form-control" value="{{ string }}" autofocus title="添加所授的课程"/>
+
+                            </div>
+
+                            <div class="form-group">
+                                <label>联系方式：</label>
+                                <input type="text" name="teacher_mobile" id="teacher_mobile" class="form-control" value="{{ teacher_mobile }}" autofocus required/>
+                            </div>
+
+                            <button type="reset" class="btn btn-default pull-left">重置</button>
+                            <button type="submit" class="btn btn-success pull-right">提交</button>
+                        </form>
+
+                    {% else %}
+                        <h2 class="text-center">完善信息</h2>
+                        <form class="form-login" action="/information_complete/" method="post">
+                            {% if message %}
+                                <div class="alert alert-danger">{{ message }}</div>
+                            {% endif %}
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>用户ID:</label>
+                                <input type="text" name="user_id" readonly="readonly" value="{{ request.session.user_id }}" class="form-control" id="user_id" autofocus required  title="当前登录用户ID，只读"/>
+                            </div>
+                            <div class="form-group">
+                                <label>所属学校：</label>
+                                <input type="text" name="user_address" readonly="readonly" value="{{ request.session.province }}-{{ request.session.city }}-{{ request.session.county }}-{{ request.session.school }}" class="form-control" id="user_address" autofocus required title="只读"/>
+                            </div>
+                            <div class="form-group">
+                                <label>身份：</label>
+                                <input type="text" name="user_identity" readonly="readonly" value="{{ request.session.identity }}" id="user_identity" class="form-control" autofocus required title="只读"/>
+                            </div>
+                            <div class="form-group">
+                                <label>姓名：</label>
+                                <input type="text" name="user_name" id="user_name" readonly="readonly" value="{{ request.session.user_name }}" class="form-control" autofocus required/>
+                            </div>
+                            <div class="form-group">
+                                <label>性别：
+                                <select name="sex" id="sex">
+                                    {% if student_sex %}
+                                        {% ifequal student_sex '男' %}
+                                            <option value="男" selected="selected">男</option>
+                                            <option value="女">女</option>
+                                        {% else %}
+                                            <option value="男">男</option>
+                                            <option value="女" selected="selected">女</option>
+                                        {% endifequal %}
+                                    {% else %}
+                                        <option value="男" selected="selected">男</option>
+                                        <option value="女">女</option>
+                                    {% endif %}
+                                </select>
+                                </label><!--男/女 -->
+                            </div>
+                            <div class="form-group">
+                                <label>所在班级：</label>
+                                <input type="text" name="grade-team" id="grade-team" readonly="readonly" value="{{ request.session.grade }}-{{ request.session.team }}" class="form-control" autofocus required/>
+                            </div>
+                            <div class="form-group">
+                                <label>监护人姓名：</label>
+                                <input type="text" name="user_guardian_name" id="user_guardian_name" class="form-control" value="{{ guardian_name }}" autofocus required/>
+                            </div>
+                            <div class="form-group">
+                                <label>监护人联系方式：</label>
+                                <input type="text" name="user_guardian_mobile" id="user_guardian_mobile" class="form-control" value="{{ guardian_mobile }}" autofocus required/>
+                            </div>
+                            <div class="form-group">
+                                <label>心理状态：</label>
+                                <input type="text" name="user_mental_state" id="user_mental_state" readonly="readonly"  value="{{ user_mental_state }}" class="form-control" autofocus required/>
+                            </div>
+                            <button type="reset" class="btn btn-default pull-left">重置</button>
+                            <button type="submit" class="btn btn-success pull-right">提交</button>
+                        </form>
+                    {% endifequal %}
+                {% endifequal %}
+            </div>
+        </div>
+    </div>
+
+    <script>$(function () {
+        //获取年级
+        $.get('{% url 'get_grade' %}',function(data){
+            for(var i = 0,len = data.grade.length; i<len ;i++){
+                $new = $("<option value="+data.grade[i] +">"+  data.grade[i]  +"</option>" );
+                $("#grade").append( $new );
+            }
+        });
+        //改变年级后
+        $("#grade").change(function(){
+            //清空班级和课程
+            $("#team").empty().append('<option value="">班级</option>');
+            $("#course").empty().append('<option value="">课程</option>');
+            $.ajax({
+                url:'{% url 'get_team' %}',
+                type:'get'
+            }).done(function(data){
+                for(var i = 0,len = data.team.length; i<len ;i++){
+                    $new = $( "<option value="+data.team[i] +">"+  data.team[i]  +"</option>" );
+                    $("#team").append( $new );
+                }
+            });
+        });
+        //改变班级
+        $("#team").change(function(){
+            //清空课程
+            $("#course").empty().append('<option value="">课程</option>');
+            $.ajax({
+                url:'{% url 'get_course' %}',
+                type:'get',
+            }).done(function(data){
+                for(var i = 0,len = data.course.length; i<len ;i++){
+                    $new = $( "<option value="+ data.course[i] +">"+  data.course[i]  +"</option>" );
+                    $("#course").append($new );
+                }
+            });
+        });
+    });</script>
+
+    <script type="text/javascript">
+        function addcourse() {
+            var grade=document.getElementById('grade').value;
+            var team=document.getElementById('team').value;
+            var course=document.getElementById('course').value;
+            console.log(grade);
+            var teach_course=document.getElementById('teach_course');
+            teach_course.value+=grade+'-'+team+'-'+course+' ';
+        }
+        {#$("#add_course").bind('onclick',add_course());#}
+
+
+    </script>
+
+
+{% endblock %}
